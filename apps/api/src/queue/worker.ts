@@ -1,4 +1,4 @@
-import { DelayedError, Worker, type Job } from 'bullmq';
+import { DelayedError, UnrecoverableError, Worker, type Job } from 'bullmq';
 import nodemailer from 'nodemailer';
 import { env } from '../config/env.js';
 import { db } from '../db/index.js';
@@ -152,12 +152,15 @@ export function startEmailWorker() {
         );
         await indexEmail(updated.rows[0]);
       } catch (error) {
-        await db.query("UPDATE emails SET status='failed', error=$2 WHERE id=$1", [
+        const message = error instanceof Error ? error.message : 'SMTP send failed';
+        const failed = await db.query("UPDATE emails SET status='failed', error=$2 WHERE id=$1 RETURNING *", [
           email.id,
-          error instanceof Error ? error.message : 'SMTP send failed'
+          message
         ]);
+        await indexEmail(failed.rows[0]);
         // SMTP has no idempotency API. Do not retry an attempted send because the
         // provider may have accepted it before the connection failed.
+        throw new UnrecoverableError(message);
       }
     },
     { connection: redis, concurrency: env.WORKER_CONCURRENCY }
