@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import { randomUUID } from 'node:crypto';
+import { existsSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
 import { OAuth2Client } from 'google-auth-library';
 import { createBullBoard } from '@bull-board/api';
@@ -312,6 +314,13 @@ app.get('/integrations/slack/callback', async (req, res) => {
     res.status(400).send(error instanceof Error ? `Slack connection failed: ${error.message}` : 'Slack connection failed');
   }
 });
+
+// In production, the API container also serves the Vite build. Local Vite
+// development is unchanged because this directory only exists after a build.
+const webDistPath = fileURLToPath(new URL('../../web/dist/', import.meta.url));
+if (existsSync(webDistPath)) {
+  app.use(express.static(webDistPath));
+}
 
 app.use((error: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   if (error instanceof z.ZodError) {
