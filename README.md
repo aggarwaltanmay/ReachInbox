@@ -19,6 +19,14 @@ The backend demo infrastructure is defined in `render.yaml`: a Docker web servic
 
 The public hosted demo uses Render's no-payment tiers solely to provide a review URL. Free web services sleep when idle, free Key Value does not offer disk persistence, free Postgres expires after 30 days, and Elasticsearch is therefore served only by the local Docker stack (the API keeps its PostgreSQL search fallback). The production architecture and restart demonstration use the persistent local Docker services described throughout this README; a production cloud deployment should upgrade the web/Key Value plans and provision private Elasticsearch.
 
+### Hosted demo limitation: Ethereal SMTP
+
+The hosted Vercel/Render demo supports Google login, Slack OAuth, campaign creation, PostgreSQL records, BullMQ scheduling and processing, Redis-backed rate limiting, queue visibility, and the interactive dashboard. However, **emails processed by the hosted Render Free API are expected to end in `failed` status instead of being delivered through Ethereal**.
+
+This is a hosting-platform restriction rather than a scheduler failure: [Render Free web services block outbound traffic on SMTP ports `25`, `465`, and `587`](https://render.com/docs/free#free-web-services), while [Ethereal SMTP requires `smtp.ethereal.email` on port `587`](https://ethereal.email/help). The API therefore starts normally and records the SMTP failure consistently in both PostgreSQL and BullMQ, but it cannot reach Ethereal from a free Render instance. Upgrading to an SMTP-capable host/Render plan would remove this restriction without an application-code change.
+
+The **complete assignment workflow, including successful Ethereal SMTP delivery, persistent Redis, Elasticsearch search, and the restart-persistence demonstration, works through the local Docker setup** documented in Quick start. The demo video should show actual email sending locally; the hosted URL is provided for convenient review of the UI, authentication, scheduling, queue processing, rate controls, and dashboard behavior.
+
 ## Environment and OAuth
 
 Create a Google OAuth web client, set its callback to `http://localhost:4000/auth/google/callback`, and populate `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`. Google identity is verified through the provider token exchange and a signed application JWT is returned to the web app.
@@ -68,7 +76,7 @@ Each schedule request contains a client-generated request UUID. A PostgreSQL tra
 
 Before SMTP, the worker atomically changes a row from `scheduled` to `processing`. SMTP does not provide a true idempotency API, so an attempted send is never retried: a crash with an ambiguous provider outcome becomes `failed` on restart instead of risking a duplicate. This is an explicit at-most-once trade-off in favor of the assignment's hard no-duplicate constraint. Rows still in `scheduled` are safely restored after restart.
 
-On startup, the API runs schema migrations, initializes and backfills the Elasticsearch index, reconciles scheduled PostgreSQL rows with BullMQ, verifies Ethereal SMTP, starts the worker, and finally listens on port `4000`. Redis uses append-only persistence and PostgreSQL stores durable business state, so restarting the Node server does not restart campaigns from the beginning.
+On startup, the API runs schema migrations, initializes and backfills the Elasticsearch index, reconciles scheduled PostgreSQL rows with BullMQ, starts the worker, and listens on port `4000`. Ethereal connectivity is then verified in the background so a temporary SMTP outage—or a host that blocks SMTP—does not prevent the API health check and dashboard from starting. Redis uses append-only persistence and PostgreSQL stores durable business state, so restarting the Node server does not restart campaigns from the beginning.
 
 ## Project structure
 
