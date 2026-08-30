@@ -11,6 +11,14 @@ A full-stack TypeScript email scheduler built around durable PostgreSQL records 
 
 The API creates and upgrades its PostgreSQL schema on startup. `ETHEREAL_USER` and `ETHEREAL_PASS` are required: startup fails clearly when they are absent so the dashboard can never mark a non-SMTP message as sent.
 
+## Production deployment
+
+The frontend is configured for Vercel through `vercel.json`. Vercel builds the `@reachinbox/web` workspace and requires `VITE_API_URL` to point to the Render API URL.
+
+The backend infrastructure is defined in `render.yaml`: an always-on Docker web service runs Express and the BullMQ worker, Render Postgres stores authoritative state, persistent Render Key Value stores BullMQ jobs and rate-limit state, and a private Elasticsearch service holds the search index. Google and Slack callback URLs must point to the Render API domain, while `WEB_ORIGIN` must exactly match the Vercel production URL.
+
+Render's free web and Key Value plans are intentionally not used for the worker path: free web services sleep when idle and free Key Value has no persistence, either of which would violate durable scheduling. The Blueprint prompts for OAuth and SMTP secrets during initial creation; secrets are never stored in Git.
+
 ## Environment and OAuth
 
 Create a Google OAuth web client, set its callback to `http://localhost:4000/auth/google/callback`, and populate `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`. Google identity is verified through the provider token exchange and a signed application JWT is returned to the web app.
