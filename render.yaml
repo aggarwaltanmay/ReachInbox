@@ -1,13 +1,12 @@
 services:
   - type: web
-    name: reachinbox-api
+    name: reachinbox-api-tanmay
     runtime: docker
-    plan: 0.5c-512mb
+    plan: free
     region: singapore
     dockerfilePath: ./Dockerfile
     dockerContext: .
     healthCheckPath: /health
-    maxShutdownDelaySeconds: 60
     autoDeployTrigger: commit
     envVars:
       - key: DATABASE_URL
@@ -19,8 +18,6 @@ services:
           type: keyvalue
           name: reachinbox-redis
           property: connectionString
-      - key: ELASTICSEARCH_URL
-        value: http://reachinbox-elasticsearch:9200
       - key: WEB_ORIGIN
         sync: false
       - key: JWT_SECRET
@@ -50,30 +47,11 @@ services:
 
   - type: keyvalue
     name: reachinbox-redis
-    plan: 256mb
+    plan: free
     region: singapore
     ipAllowList: []
     maxmemoryPolicy: noeviction
-    persistenceMode: journal-snapshot
-
-  - type: pserv
-    name: reachinbox-elasticsearch
-    runtime: image
-    plan: 1c-2g
-    region: singapore
-    image:
-      url: docker.elastic.co/elasticsearch/elasticsearch:8.15.3
-    envVars:
-      - key: discovery.type
-        value: single-node
-      - key: xpack.security.enabled
-        value: "false"
-      - key: ES_JAVA_OPTS
-        value: -Xms512m -Xmx512m
-    disk:
-      name: elasticsearch-data
-      mountPath: /usr/share/elasticsearch/data
-      sizeGB: 10
+    persistenceMode: off
 
 databases:
   - name: reachinbox-postgres

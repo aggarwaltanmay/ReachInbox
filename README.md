@@ -15,9 +15,9 @@ The API creates and upgrades its PostgreSQL schema on startup. `ETHEREAL_USER` a
 
 The frontend is configured for Vercel through `vercel.json`. Vercel builds the `@reachinbox/web` workspace and requires `VITE_API_URL` to point to the Render API URL.
 
-The backend infrastructure is defined in `render.yaml`: an always-on Docker web service runs Express and the BullMQ worker, Render Postgres stores authoritative state, persistent Render Key Value stores BullMQ jobs and rate-limit state, and a private Elasticsearch service holds the search index. Google and Slack callback URLs must point to the Render API domain, while `WEB_ORIGIN` must exactly match the Vercel production URL.
+The backend demo infrastructure is defined in `render.yaml`: a Docker web service runs Express and the BullMQ worker, Render Postgres stores authoritative state, and Render Key Value provides Redis compatibility. Google and Slack callback URLs must point to the Render API domain, while `WEB_ORIGIN` must exactly match the Vercel production URL. The Blueprint prompts for OAuth and SMTP secrets during initial creation; secrets are never stored in Git.
 
-Render's free web and Key Value plans are intentionally not used for the worker path: free web services sleep when idle and free Key Value has no persistence, either of which would violate durable scheduling. The Blueprint prompts for OAuth and SMTP secrets during initial creation; secrets are never stored in Git.
+The public hosted demo uses Render's no-payment tiers solely to provide a review URL. Free web services sleep when idle, free Key Value does not offer disk persistence, free Postgres expires after 30 days, and Elasticsearch is therefore served only by the local Docker stack (the API keeps its PostgreSQL search fallback). The production architecture and restart demonstration use the persistent local Docker services described throughout this README; a production cloud deployment should upgrade the web/Key Value plans and provision private Elasticsearch.
 
 ## Environment and OAuth
 

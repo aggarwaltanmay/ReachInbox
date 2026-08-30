@@ -5,3 +5,5 @@ dist
 *.log
 apps/web/.vite
 *.tsbuildinfo
+.vercel
+.env.local
