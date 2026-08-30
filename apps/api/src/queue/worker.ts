@@ -16,6 +16,9 @@ const transporter = nodemailer.createTransport({
   host: 'smtp.ethereal.email',
   port: 587,
   secure: false,
+  connectionTimeout: 10_000,
+  greetingTimeout: 10_000,
+  socketTimeout: 20_000,
   auth: { user: env.ETHEREAL_USER, pass: env.ETHEREAL_PASS }
 });
 

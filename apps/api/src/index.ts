@@ -334,10 +334,16 @@ migrate()
   .then(() => ensureSearchIndex().catch((error) => console.error('Elasticsearch initialization failed', error)))
   .then(reindexStoredEmails)
   .then(reconcileScheduledEmails)
-  .then(verifyEmailTransport)
   .then(() => {
     startEmailWorker();
     app.listen(env.PORT, () => console.log(`API listening on :${env.PORT}`));
+
+    // SMTP availability must not prevent the HTTP service from starting. Some
+    // hosting providers block outbound SMTP on free plans; individual send
+    // attempts are still recorded as failed by the worker in that case.
+    void verifyEmailTransport()
+      .then(() => console.log('Ethereal SMTP connection verified'))
+      .catch((error) => console.warn('Ethereal SMTP verification failed; API remains available', error));
   })
   .catch((error) => {
     console.error(error);
