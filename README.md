@@ -194,3 +194,8 @@ An SMTP failure consumes an hourly slot and is not retried because the provider 
 - **Backend:** Express + TypeScript API, PostgreSQL persistence, BullMQ delayed jobs, Redis recovery/rate state, configurable worker concurrency, cross-instance pacing, per-sender hourly limits, Ethereal SMTP, Elasticsearch indexing/search, Bull Board, transactional request idempotency, Google OAuth, Slack OAuth/webhook notifications, and disconnect/reconnect.
 - **Frontend:** React + TypeScript + Tailwind, real Google login, user header/avatar/logout, scheduled and sent tabs, compose modal, CSV/TXT parsing and lead count, local start time, pacing/hourly controls, loading/empty/error states, search, queue dashboard link, responsive design, animations, and dark mode.
 - **Infrastructure:** Docker Compose for PostgreSQL, Redis with AOF persistence, and Elasticsearch. No cron library or operating-system cron is used.
+
+
+
+## Demo Video 
+Link -- https://drive.google.com/file/d/1BpcFbWgEpuWXTi08pld1QjzQCE6okPIC/view?usp=sharing
